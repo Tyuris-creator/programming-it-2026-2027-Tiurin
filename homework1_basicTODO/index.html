@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TODO LIST homework1</title>
+    <link href="./styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="page">
+      <h1>TODO лист</h1>
+      <p id="status">Загрузка</p>
+      <form>
+        <input id="task" type="text" placeholder="Введете задачу..." />
+        <button id="addTask">Добавить задачу</button>
+      </form>
+      <div id="filters">
+        <button type="button" data-filter="all" class="active">Все</button>
+        <button type="button" data-filter="active">Активные</button>
+        <button type="button" data-filter="done">Выполненные</button>
+      </div>
+      <div id="task-container"></div>
+    </div>
+    <script src="./script.js"></script>
+  </body>
+</html>
