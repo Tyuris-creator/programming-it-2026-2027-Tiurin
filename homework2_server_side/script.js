@@ -73,7 +73,7 @@ function render() {
     checkbox.dataset.action = "toggle";
 
     const title = document.createElement("span");
-    title.textContent = task.title;
+    title.textContent = task.id + "-" + task.title;
     if (task.completed) title.style.textDecoration = "line-through";
 
     const del = document.createElement("button");
