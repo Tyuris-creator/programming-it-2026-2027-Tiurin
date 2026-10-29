@@ -5,7 +5,9 @@ const PORT = 3000;
 
 const app = express();
 
-
+app.get("/", (req,res) => {
+    
+})
 
 
 app.listen(PORT, () => {
