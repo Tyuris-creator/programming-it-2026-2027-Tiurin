@@ -7,6 +7,26 @@ const filtersEl = document.getElementById("filters");
 const STUDENT_ID = "Mikhail_Tiurin";
 const API_URL = "https://6ac64b73bea0e72cf5c8d494.mockapi.io/api/v1/tasks";
 
+// cash
+const CACHE_KEY = "tasks_cache";
+
+function saveCache() {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(tasks));
+  } catch (e) {
+    console.log("Не удалось сохранить кэш", e);
+  }
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function getTasks() {
   const response = await fetch(API_URL);
   if (!response.ok) throw new Error("Не удалось получить задачи");
@@ -70,13 +90,22 @@ function render() {
 }
 
 async function init() {
+  tasks = loadCache();
+  if (tasks.length) render();
+
   statusEl.textContent = "Загрузка...";
   try {
     tasks = await getTasks();
+    saveCache();
     render();
   } catch (e) {
     console.log(e);
-    statusEl.textContent = "Ошибка загрузки";
+    if (tasks.length) {
+      statusEl.textContent = `Ошибка загрузки, показан кэш (${tasks.length})`;
+      render();
+    } else {
+      statusEl.textContent = "Ошибка загрузки";
+    }
   }
 }
 init();
@@ -93,6 +122,7 @@ form.addEventListener("submit", async (e) => {
       studentId: STUDENT_ID,
     });
     tasks.push(created);
+    saveCache();
     input.value = "";
     render();
   } catch (err) {
@@ -111,6 +141,7 @@ container.addEventListener("click", async (e) => {
     try {
       await deleteTask(id);
       tasks = tasks.filter((t) => String(t.id) !== String(id));
+      saveCache();
       render();
     } catch (err) {
       console.log(err);
@@ -119,6 +150,7 @@ container.addEventListener("click", async (e) => {
   } else if (action === "toggle") {
     const task = tasks.find((t) => String(t.id) === String(id));
     if (task) task.completed = !task.completed;
+    saveCache();
     render();
   }
 });
