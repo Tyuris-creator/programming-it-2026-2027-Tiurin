@@ -4,13 +4,33 @@ const container = document.getElementById("task-container");
 const statusEl = document.getElementById("status");
 const filtersEl = document.getElementById("filters");
 
-// массив 
-let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-let filter = "all"; // "all" | "active" | "done"
+const STUDENT_ID = "Mikhail_Tiurin";
+const API_URL = "https://6ac64b73bea0e72cf5c8d494.mockapi.io/api/v1/tasks";
 
-function save() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+async function getTasks() {
+  const response = await fetch(API_URL);
+  if (!response.ok) throw new Error("Не удалось получить задачи");
+  const data = await response.json();
+  return data.filter((t) => t.studentId === STUDENT_ID);
 }
+
+async function createTask(task) {
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(task),
+  });
+  if (!response.ok) throw new Error("Не удалось создать задачу");
+  return response.json();
+}
+
+async function deleteTask(id) {
+  const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Не удалось удалить задачу");
+}
+
+let tasks = [];
+let filter = "all";
 
 function visibleTasks() {
   if (filter === "active") return tasks.filter((t) => !t.completed);
@@ -49,35 +69,59 @@ function render() {
     statusEl.textContent = `Всего: ${tasks.length}, показано: ${list.length}`;
 }
 
-// добавление
-form.addEventListener("submit", (e) => {
+async function init() {
+  statusEl.textContent = "Загрузка...";
+  try {
+    tasks = await getTasks();
+    render();
+  } catch (e) {
+    console.log(e);
+    statusEl.textContent = "Ошибка загрузки";
+  }
+}
+init();
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const title = input.value.trim();
-  if (!title) return; // пустая строка / пробелы — ничего не делаем
+  if (!title) return;
 
-  tasks.push({ id: Date.now().toString(), title, completed: false });
-  save();
-  input.value = "";
-  render();
+  try {
+    const created = await createTask({
+      title,
+      completed: false,
+      studentId: STUDENT_ID,
+    });
+    tasks.push(created);
+    input.value = "";
+    render();
+  } catch (err) {
+    console.log(err);
+    statusEl.textContent = "Не удалось создать задачу";
+  }
 });
 
-// удаление и toggle через делегирование
-container.addEventListener("click", (e) => {
+container.addEventListener("click", async (e) => {
   const action = e.target.dataset.action;
   if (!action) return;
 
   const id = e.target.closest(".task").dataset.id;
 
   if (action === "delete") {
-    tasks = tasks.filter((t) => t.id !== id);
+    try {
+      await deleteTask(id);
+      tasks = tasks.filter((t) => String(t.id) !== String(id));
+      render();
+    } catch (err) {
+      console.log(err);
+      statusEl.textContent = "Ошибка удаления";
+    }
   } else if (action === "toggle") {
-    const task = tasks.find((t) => t.id === id);
+    const task = tasks.find((t) => String(t.id) === String(id));
     if (task) task.completed = !task.completed;
+    render();
   }
-  save();
-  render();
 });
-
 
 filtersEl.addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-filter]");
@@ -87,7 +131,5 @@ filtersEl.addEventListener("click", (e) => {
   for (const b of filtersEl.querySelectorAll("button")) {
     b.classList.toggle("active", b === btn);
   }
-  render(); 
+  render();
 });
-
-render();
