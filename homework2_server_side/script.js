@@ -136,7 +136,7 @@ container.addEventListener("click", async (e) => {
   if (!action) return;
 
   const id = e.target.closest(".task").dataset.id;
-
+  console.log(id);
   if (action === "delete") {
     try {
       await deleteTask(id);
