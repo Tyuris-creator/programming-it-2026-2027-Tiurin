@@ -50,7 +50,7 @@ app.post("/api/v1/tasks", async (req, res) => {
     return res.status(500).json({ error: "Ошибка записи файла" });
   }
 
-  res.status(204).json(task);
+  res.status(201).json(task);
 });
 
 app.delete("/api/v1/tasks/:id", async (req, res) => {
@@ -67,7 +67,7 @@ app.delete("/api/v1/tasks/:id", async (req, res) => {
     console.error("Ошибка записи файла:", error);
     return res.status(500).json({ error: "Ошибка записи файла" });
   }
-  res.status(204).json({ message: "Задача удалена" });
+  res.status(200).end();
 });
 
 app.put("/api/v1/tasks/:id", async (req, res) => {
@@ -86,7 +86,7 @@ app.put("/api/v1/tasks/:id", async (req, res) => {
     task.id = id;
     DB[index] = task;
     await writeToJson(PATH_TO_JSON, DB);
-    res.status(204).json(task);
+    res.status(200).json(task);
   } catch (error) {
     console.error("Ошибка записи файла:", error);
     return res.status(500).json({ error: "Ошибка записи файла" });
