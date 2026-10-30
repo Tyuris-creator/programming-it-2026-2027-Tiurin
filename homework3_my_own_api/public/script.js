@@ -29,7 +29,7 @@ function loadCache() {
 
 function patchTask(task) {
   return fetch(`${API_URL}/${task.id}`, {
-    method: "PATCH",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(task),
   });

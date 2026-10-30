@@ -40,9 +40,10 @@ app.delete("/api/v1/tasks/:id", (req, res) => {
   res.status(204).send();
 });
 
-app.patch("/api/v1/tasks/:id", (req, res) => {
-  console.log("PATCH /api/v1/tasks/:id");
+app.put("/api/v1/tasks/:id", (req, res) => {
+  console.log("PUT /api/v1/tasks/:id");
   const id = Number(req.params.id);
+  console.log(id);
   const index = DB.findIndex((t) => t.id === id);
   if (index === -1) {
     return res.status(404).json({ error: "Задача не найдена" });
