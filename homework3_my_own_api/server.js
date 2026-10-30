@@ -18,13 +18,13 @@ app.get("/api/v1/tasks", (req, res) => {
 
 app.post("/api/v1/tasks", (req, res) => {
   console.log("POST /api/v1/tasks");
-  console.log("DB:", DB);
   const task = req.body;
   if (!task || !task.title || !task.studentId) {
     return res.status(400).json({ error: "Неверные данные" });
   }
   task.id = DB.length + 1;
   DB.push(task);
+  console.log("DB:", DB);
   res.status(201).json(task);
 });
 
@@ -38,6 +38,23 @@ app.delete("/api/v1/tasks/:id", (req, res) => {
   }
   DB.splice(index, 1);
   res.status(204).send();
+});
+
+app.patch("/api/v1/tasks/:id", (req, res) => {
+  console.log("PATCH /api/v1/tasks/:id");
+  const id = Number(req.params.id);
+  const index = DB.findIndex((t) => t.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Задача не найдена" });
+  }
+  const task = req.body;
+  console.log(task);
+  if (!task || !task.title || !task.studentId) {
+    return res.status(400).json({ error: "Неверные данные" });
+  }
+  task.id = id;
+  DB[index] = task;
+  res.json(task);
 });
 
 app.listen(PORT, () => {

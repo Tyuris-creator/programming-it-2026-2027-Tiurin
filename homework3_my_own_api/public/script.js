@@ -27,6 +27,14 @@ function loadCache() {
   }
 }
 
+function patchTask(task) {
+  return fetch(`${API_URL}/${task.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(task),
+  });
+}
+
 async function getTasks() {
   const response = await fetch(API_URL);
   if (!response.ok) throw new Error("Не удалось получить задачи");
@@ -151,6 +159,7 @@ container.addEventListener("click", async (e) => {
     const task = tasks.find((t) => String(t.id) === String(id));
     if (task) task.completed = !task.completed;
     saveCache();
+    await patchTask(task);
     render();
   }
 });
