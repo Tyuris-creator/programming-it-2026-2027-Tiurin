@@ -1,7 +1,21 @@
 import express from "express";
 import cors from "cors";
 
-const DB = [];
+import writeToJson from "./json_handlers/writeFromJson.js";
+import readFromJson from "./json_handlers/readFromJson.js";
+
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+
+import path from "node:path";
+
+import { randomUUID } from "crypto";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const PATH_TO_JSON = path.join(__dirname, "data/data.json");
+
 const PORT = 3000;
 
 const app = express();
@@ -10,52 +24,73 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
 
-app.get("/api/v1/tasks", (req, res) => {
-  console.log("GET /api/v1/tasks");
-  console.log("DB:", DB);
-  res.json(DB);
+app.get("/api/v1/tasks", async (req, res) => {
+  try {
+    const DB = await readFromJson(PATH_TO_JSON);
+    res.status(200).json(DB);
+  } catch (error) {
+    console.error("Ошибка чтения файла:", error);
+    return res.status(500).json({ error: "Ошибка чтения файла" });
+  }
 });
 
-app.post("/api/v1/tasks", (req, res) => {
-  console.log("POST /api/v1/tasks");
+app.post("/api/v1/tasks", async (req, res) => {
   const task = req.body;
   if (!task || !task.title || !task.studentId) {
     return res.status(400).json({ error: "Неверные данные" });
   }
-  task.id = DB.length + 1;
-  DB.push(task);
-  console.log("DB:", DB);
-  res.status(201).json(task);
+  task.id = randomUUID();
+
+  try {
+    const DB = await readFromJson(PATH_TO_JSON);
+    DB.push(task);
+    await writeToJson(PATH_TO_JSON, DB);
+  } catch (error) {
+    console.error("Ошибка записи файла:", error);
+    return res.status(500).json({ error: "Ошибка записи файла" });
+  }
+
+  res.status(204).json(task);
 });
 
-app.delete("/api/v1/tasks/:id", (req, res) => {
-  console.log("DELETE /api/v1/tasks/:id");
-  console.log("DB:", DB);
-  const id = Number(req.params.id);
-  const index = DB.findIndex((t) => t.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: "Задача не найдена" });
+app.delete("/api/v1/tasks/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const DB = await readFromJson(PATH_TO_JSON);
+    const index = DB.findIndex((t) => t.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: "Задача не найдена" });
+    }
+    DB.splice(index, 1);
+    await writeToJson(PATH_TO_JSON, DB);
+  } catch (error) {
+    console.error("Ошибка записи файла:", error);
+    return res.status(500).json({ error: "Ошибка записи файла" });
   }
-  DB.splice(index, 1);
-  res.status(204).send();
+  res.status(204).json({ message: "Задача удалена" });
 });
 
-app.put("/api/v1/tasks/:id", (req, res) => {
-  console.log("PUT /api/v1/tasks/:id");
-  const id = Number(req.params.id);
-  console.log(id);
-  const index = DB.findIndex((t) => t.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: "Задача не найдена" });
+app.put("/api/v1/tasks/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const DB = await readFromJson(PATH_TO_JSON);
+    const index = DB.findIndex((t) => t.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: "Задача не найдена" });
+    }
+    const task = req.body;
+    console.log(task);
+    if (!task || !task.title || !task.studentId) {
+      return res.status(400).json({ error: "Неверные данные" });
+    }
+    task.id = id;
+    DB[index] = task;
+    await writeToJson(PATH_TO_JSON, DB);
+    res.status(204).json(task);
+  } catch (error) {
+    console.error("Ошибка записи файла:", error);
+    return res.status(500).json({ error: "Ошибка записи файла" });
   }
-  const task = req.body;
-  console.log(task);
-  if (!task || !task.title || !task.studentId) {
-    return res.status(400).json({ error: "Неверные данные" });
-  }
-  task.id = id;
-  DB[index] = task;
-  res.json(task);
 });
 
 app.listen(PORT, () => {
