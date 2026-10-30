@@ -158,9 +158,14 @@ container.addEventListener("click", async (e) => {
   } else if (action === "toggle") {
     const task = tasks.find((t) => String(t.id) === String(id));
     if (task) task.completed = !task.completed;
-    saveCache();
-    await patchTask(task);
-    render();
+    try {
+      await patchTask(task);
+      saveCache();
+      render();
+    } catch (err) {
+      console.log(err);
+      statusEl.textContent = "Ошибка обновления";
+    }
   }
 });
 
