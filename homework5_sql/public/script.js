@@ -1,3 +1,12 @@
+import {
+  saveCache,
+  loadCache,
+  patchTask,
+  getTasks,
+  createTask,
+  deleteTask,
+} from "./handlers.js";
+
 const form = document.querySelector("form");
 const input = document.getElementById("task");
 const container = document.getElementById("task-container");
@@ -5,57 +14,6 @@ const statusEl = document.getElementById("status");
 const filtersEl = document.getElementById("filters");
 
 const STUDENT_ID = "Mikhail_Tiurin";
-const API_URL = "http://localhost:3000/api/v1/tasks";
-
-// cash
-const CACHE_KEY = "tasks_cache";
-
-function saveCache() {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(tasks));
-  } catch (e) {
-    console.log("Не удалось сохранить кэш", e);
-  }
-}
-
-function loadCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function patchTask(task) {
-  return fetch(`${API_URL}/${task.id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(task),
-  });
-}
-
-async function getTasks() {
-  const response = await fetch(API_URL);
-  if (!response.ok) throw new Error("Не удалось получить задачи");
-  const data = await response.json();
-  return data.filter((t) => t.studentId === STUDENT_ID);
-}
-
-async function createTask(task) {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(task),
-  });
-  if (!response.ok) throw new Error("Не удалось создать задачу");
-  return response.json();
-}
-
-async function deleteTask(id) {
-  const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-  if (!response.ok) throw new Error("Не удалось удалить задачу");
-}
 
 let tasks = [];
 let filter = "all";
@@ -104,7 +62,7 @@ async function init() {
   statusEl.textContent = "Загрузка...";
   try {
     tasks = await getTasks();
-    saveCache();
+    saveCache(tasks);
     render();
   } catch (e) {
     console.log(e);
@@ -130,7 +88,7 @@ form.addEventListener("submit", async (e) => {
       studentId: STUDENT_ID,
     });
     tasks.push(created);
-    saveCache();
+    saveCache(tasks);
     input.value = "";
     render();
   } catch (err) {
@@ -160,7 +118,7 @@ container.addEventListener("click", async (e) => {
     if (task) task.completed = !task.completed;
     try {
       await patchTask(task);
-      saveCache();
+      saveCache(tasks);
       render();
     } catch (err) {
       console.log(err);
