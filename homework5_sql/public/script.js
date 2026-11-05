@@ -107,7 +107,7 @@ container.addEventListener("click", async (e) => {
     try {
       await deleteTask(id);
       tasks = tasks.filter((t) => String(t.id) !== String(id));
-      saveCache();
+      saveCache(tasks);
       render();
     } catch (err) {
       console.log(err);

@@ -43,35 +43,40 @@ app.post("/api/v1/tasks", async (req, res) => {
   if (!task || !task.title || !task.studentId) {
     return res.status(400).json({ error: "Неверные данные" });
   }
-  task.id = randomUUID();
 
   try {
-    const DB = await readFromJson(PATH_TO_JSON);
-    DB.push(task);
-    await writeToJson(PATH_TO_JSON, DB);
+    const savedTask = await taskRepo.add({
+      ...task,
+      id: randomUUID(),
+    });
+    res.status(201).json(savedTask);
   } catch (error) {
-    console.error("Ошибка записи файла:", error);
-    return res.status(500).json({ error: "Ошибка записи файла" });
+    console.error("Ошибка добавления задачи в PostgreSQL:", error);
+    return res.status(500).json({ error: "Ошибка добавления задачи" });
   }
-
-  res.status(201).json(task);
 });
 
 app.delete("/api/v1/tasks/:id", async (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
+
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  ) {
+    return res.status(400).json({ error: "Некорректный id задачи" });
+  }
+
   try {
-    const DB = await readFromJson(PATH_TO_JSON);
-    const index = DB.findIndex((t) => t.id === id);
-    if (index === -1) {
+    const deleted = await taskRepo.remove(id);
+
+    if (!deleted) {
       return res.status(404).json({ error: "Задача не найдена" });
     }
-    DB.splice(index, 1);
-    await writeToJson(PATH_TO_JSON, DB);
+
+    return res.status(204).end();
   } catch (error) {
-    console.error("Ошибка записи файла:", error);
-    return res.status(500).json({ error: "Ошибка записи файла" });
+    console.error("Ошибка удаления задачи из PostgreSQL:", error);
+    return res.status(500).json({ error: "Ошибка удаления задачи" });
   }
-  res.status(200).end();
 });
 
 app.put("/api/v1/tasks/:id", async (req, res) => {
