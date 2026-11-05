@@ -80,25 +80,36 @@ app.delete("/api/v1/tasks/:id", async (req, res) => {
 });
 
 app.put("/api/v1/tasks/:id", async (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
+  const task = req.body;
+
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  ) {
+    return res.status(400).json({ error: "Некорректный id задачи" });
+  }
+
+  if (
+    !task ||
+    typeof task.title !== "string" ||
+    !task.title.trim() ||
+    typeof task.studentId !== "string" ||
+    !task.studentId.trim()
+  ) {
+    return res.status(400).json({ error: "Неверные данные" });
+  }
+
   try {
-    const DB = await readFromJson(PATH_TO_JSON);
-    const index = DB.findIndex((t) => t.id === id);
-    if (index === -1) {
+    const updatedTask = await taskRepo.update(id, task);
+
+    if (!updatedTask) {
       return res.status(404).json({ error: "Задача не найдена" });
     }
-    const task = req.body;
-    console.log(task);
-    if (!task || !task.title || !task.studentId) {
-      return res.status(400).json({ error: "Неверные данные" });
-    }
-    task.id = id;
-    DB[index] = task;
-    await writeToJson(PATH_TO_JSON, DB);
-    res.status(200).json(task);
+
+    return res.status(200).json(updatedTask);
   } catch (error) {
-    console.error("Ошибка записи файла:", error);
-    return res.status(500).json({ error: "Ошибка записи файла" });
+    console.error("Ошибка обновления задачи в PostgreSQL:", error);
+    return res.status(500).json({ error: "Ошибка обновления задачи" });
   }
 });
 

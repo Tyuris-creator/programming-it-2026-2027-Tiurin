@@ -1,6 +1,5 @@
 import pool from "../db/pool.js";
 
-
 export default class TaskRepository {
   async findAll() {
     const { rows } = await pool.query(`
@@ -26,5 +25,17 @@ export default class TaskRepository {
     const result = await pool.query("DELETE FROM tasks WHERE id = $1", [id]);
 
     return result.rowCount > 0;
+  }
+
+  async update(id, task) {
+    const { rows } = await pool.query(
+      `UPDATE tasks
+     SET title = $2, completed = $3, student_id = $4
+     WHERE id = $1
+     RETURNING id, title, completed, student_id AS "studentId"`,
+      [id, task.title, task.completed ?? false, task.studentId],
+    );
+
+    return rows[0] ?? null;
   }
 }
