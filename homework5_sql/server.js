@@ -1,8 +1,6 @@
 import express from "express";
 import cors from "cors";
 
-import writeToJson from "./json_handlers/writeFromJson.js";
-import readFromJson from "./json_handlers/readFromJson.js";
 
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
@@ -14,11 +12,6 @@ import { randomUUID } from "crypto";
 import taskRepository from "./repositories/taskRepository.js";
 
 const taskRepo = new taskRepository();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const PATH_TO_JSON = path.join(__dirname, "data/data.json");
 
 const PORT = 3000;
 
