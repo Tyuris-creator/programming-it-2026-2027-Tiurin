@@ -61,7 +61,7 @@ async function init() {
 
   statusEl.textContent = "Загрузка...";
   try {
-    tasks = await getTasks();
+    tasks = await getTasks(STUDENT_ID);
     saveCache(tasks);
     render();
   } catch (e) {

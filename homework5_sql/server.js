@@ -11,6 +11,10 @@ import path from "node:path";
 
 import { randomUUID } from "crypto";
 
+import taskRepository from "./repositories/taskRepository.js";
+
+const taskRepo = new taskRepository();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -26,8 +30,8 @@ app.use(express.static("public"));
 
 app.get("/api/v1/tasks", async (req, res) => {
   try {
-    const DB = await readFromJson(PATH_TO_JSON);
-    res.status(200).json(DB);
+    const tasks = await taskRepo.findAll();
+    res.status(200).json(tasks);
   } catch (error) {
     console.error("Ошибка чтения файла:", error);
     return res.status(500).json({ error: "Ошибка чтения файла" });

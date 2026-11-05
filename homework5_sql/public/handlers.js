@@ -26,7 +26,7 @@ export function patchTask(task) {
   });
 }
 
-export async function getTasks() {
+export async function getTasks(STUDENT_ID) {
   const response = await fetch(API_URL);
   if (!response.ok) throw new Error("Не удалось получить задачи");
   const data = await response.json();
